@@ -342,7 +342,7 @@ def search_trend(crop_name: str, query: str = "") -> str:
                 {
                     "date":       str(r["report_date"]),
                     "source":     r["source"],
-                    "content":    r["content"][:600],
+                    "content":    r["content"],
                     "similarity": float(r["similarity"]),
                 }
                 for r in rows

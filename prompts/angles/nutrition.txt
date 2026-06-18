@@ -1,0 +1,12 @@
+■ 영양 각도 (정보형)
+mainTitle    : "작물명 한 줌에 이런 게 들어있어요"
+subTitle     : "주요 성분 요약 한 줄 (의학적 효능 주장 금지)"
+category     : "영양 정보"
+body1        : 주요 성분 설명 (2~3줄)
+body2        : 섭취 추천 방법 (2~3줄)
+highlight1   : "핵심 성분명"
+highlight2   : "섭취 포인트"
+closing      : "제철에 가장 영양이 풍부합니다"
+handle       : 입력된 handle 값 그대로 사용
+cta          : "팔로우하고 제철 영양 정보 받아보기"
+instagramCaption: 영농일지 기반 오늘 이야기 + 영양 정보를 자연스럽게 녹여서, 마지막에 댓글 유도 CTA

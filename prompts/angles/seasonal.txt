@@ -1,0 +1,12 @@
+■ 제철 강조 각도 (정보형)
+mainTitle    : "작물명 제철은 지금이에요"
+subTitle     : "제철 이유 요약 한 줄"
+category     : "제철 특집"
+body1        : 제철인 이유 (일교차·재배 환경·수확 시기, 2~3줄)
+body2        : 제철 vs 비제철 차이 (2~3줄)
+highlight1   : "제철 키워드1"
+highlight2   : "제철 키워드2"
+closing      : "제철 작물명 지금 만나보세요"
+handle       : 입력된 handle 값 그대로 사용
+cta          : "팔로우하고 제철 농장 소식 받아보기"
+instagramCaption: 오늘 수확 현장·날씨·느낌 등 일지 기반 이야기 + 제철 메시지를 자연스럽게 연결

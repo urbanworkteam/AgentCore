@@ -1,0 +1,12 @@
+■ 구매 유도 각도 (판매형 — 10% 이하 유지)
+mainTitle    : "수확 시작했습니다"
+subTitle     : "이번 시즌 간단 소개 한 줄"
+category     : "지금 수확중"
+body1        : 이번 시즌 특징 (2~3줄)
+body2        : 배송·구매 방법 안내 (2~3줄)
+highlight1   : "구매 키워드1"
+highlight2   : "구매 키워드2"
+closing      : "프로필 링크에서 주문하세요"
+handle       : 입력된 handle 값 그대로 사용
+cta          : "프로필 링크에서 지금 주문하기"
+instagramCaption: 오늘 수확 이야기를 자연스럽게 + 구매 경로를 억지스럽지 않게 안내 (스마트스토어 / DM / 댓글)

@@ -1,0 +1,12 @@
+■ 보관법 각도 (정보형)
+mainTitle    : "작물명 신선하게 오래 두는 법"
+subTitle     : "보관 핵심 요약 한 줄"
+category     : "보관 꿀팁"
+body1        : 잘못된 보관 방법 (공감 유도, 2~3줄)
+body2        : 올바른 보관법 핵심 (2~3줄)
+highlight1   : "보관 핵심 키워드1"
+highlight2   : "보관 핵심 키워드2"
+closing      : "더 궁금한 점은 댓글로 물어보세요"
+handle       : 입력된 handle 값 그대로 사용
+cta          : "팔로우하고 농산물 보관 꿀팁 더 받아보기"
+instagramCaption: 보관법을 알게 된 계기나 농장 에피소드를 자연스럽게, 마지막에 댓글 유도 CTA
