@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPOSITORY: farmily-agentcore
