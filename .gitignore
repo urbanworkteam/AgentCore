@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+
+# 가상환경
+.venv/
+venv/
+env/
+
+# 환경변수
+.env
+.env.*
+
+# 테스트 / 커버리지
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# 백업 파일
+*.bak
+*.orig
+
+# 설계 문서 (내부 전용)
+ROADMAP.md
+
+# 나중에 추가 예정
+setup_memory.py
