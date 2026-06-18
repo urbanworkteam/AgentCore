@@ -39,5 +39,6 @@ htmlcov/
 # 설계 문서 (내부 전용)
 ROADMAP.md
 
-# 나중에 추가 예정
+# AgentCore 관련 내부 전용
 setup_memory.py
+agent_instruction.txt
