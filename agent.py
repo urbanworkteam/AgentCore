@@ -19,9 +19,11 @@ agent.py  —  Farmily AgentCore 메인 엔트리포인트
   - bedrock-agent-runtime VPC Endpoint              → 불필요 (bedrock-runtime만 사용)
 """
 import json
+import logging
 import os
 import random
 import re
+import time
 
 import boto3
 import psycopg2.extras
@@ -48,6 +50,32 @@ GUARDRAIL_ID         = os.environ.get("GUARDRAIL_ID", "")
 GUARDRAIL_VERSION    = os.environ.get("GUARDRAIL_VERSION", "1")
 
 _lambda_client = boto3.client("lambda", region_name=REGION)
+_cw_client     = boto3.client("cloudwatch", region_name=REGION)
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+_logger = logging.getLogger("farmily.agentcore")
+
+def _log(level: str, event: str, **fields):
+    _logger.info(json.dumps({
+        "level": level,
+        "event": event,
+        "ts":    time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        **fields,
+    }, ensure_ascii=False))
+
+def _emit(metric: str, value: float, unit: str = "Count", dims: list = None):
+    try:
+        _cw_client.put_metric_data(
+            Namespace="Farmily/AgentCore",
+            MetricData=[{
+                "MetricName": metric,
+                "Value":      value,
+                "Unit":       unit,
+                "Dimensions": dims or [],
+            }],
+        )
+    except Exception:
+        pass  # 메트릭 발행 실패가 메인 흐름을 막지 않도록
 
 _PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "prompts")
 
@@ -126,6 +154,9 @@ def handler(payload, context):
     if not job_id:
         return {"error": "jobId 필수"}
 
+    _log("INFO", "request_received",
+         user_id=user_id, platform=platform, diary_count=len(diary_ids), job_id=job_id)
+
     # 2. DB 컨텍스트 조회 (crop_id, crop_name, region 등)
     ctx = _fetch_context(user_id, diary_ids)
     if "error" in ctx:
@@ -144,6 +175,9 @@ def handler(payload, context):
             agent_kwargs["session_manager"] = session_mgr
         agent = Agent(**agent_kwargs)
 
+        _log("INFO", "agent_start", job_id=job_id, crop_name=ctx["crop_name"], platform=platform)
+        _agent_start = time.time()
+
         agent_input = json.dumps({
             "userId":        user_id,
             "platform":      platform.lower(),
@@ -157,12 +191,21 @@ def handler(payload, context):
 
         response = agent(agent_input)
         raw_text = str(response)
+        elapsed_ms = int((time.time() - _agent_start) * 1000)
         _update_job(job_id, "GENERATING", 60)
 
         # 5. JSON 파싱
         parsed = _parse_response(raw_text)
         if parsed.get("reasoning") == "JSON 파싱 실패 — fallback":
             raise ValueError(f"응답 파싱 실패. raw={raw_text[:200]}")
+
+        _log("INFO", "agent_done",
+             job_id=job_id, elapsed_ms=elapsed_ms,
+             angle=parsed.get("angle"), content_type=parsed.get("contentType"))
+        _emit("AgentResponseTime", elapsed_ms, unit="Milliseconds",
+              dims=[{"Name": "Platform", "Value": platform}])
+        _emit("ContentJobDone", 1,
+              dims=[{"Name": "Platform", "Value": platform}])
 
         # 6. DB 저장
         caption  = parsed.get("instagramCaption", "")
@@ -196,6 +239,9 @@ def handler(payload, context):
         }
 
     except Exception as exc:
+        _log("ERROR", "job_failed", job_id=job_id, user_id=user_id, error=str(exc))
+        _emit("ContentJobFailed", 1,
+              dims=[{"Name": "Platform", "Value": platform}])
         _fail_job(job_id, str(exc))
         return {"error": str(exc), "jobId": job_id}
 
