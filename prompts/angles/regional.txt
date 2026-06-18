@@ -1,0 +1,12 @@
+■ 지역 강조 각도 (신뢰형)
+mainTitle    : "지역명 작물명이 유명한 이유"
+subTitle     : "지역 대표 특징 한 줄"
+category     : "지역 특산물"
+body1        : 지역 특산물 스토리 (search_local_specialty 결과 활용, 2~3줄)
+body2        : 우리 농장 위치·환경 특징 (2~3줄)
+highlight1   : "지역 키워드1"
+highlight2   : "지역 키워드2"
+closing      : "산지 직송으로 보내드립니다"
+handle       : 입력된 handle 값 그대로 사용
+cta          : "팔로우하고 산지 직송 소식 받아보기"
+instagramCaption: 지역 특색과 농장 이야기를 엮어 자유롭게, 프로필 링크 유도 CTA

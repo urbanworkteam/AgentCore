@@ -1,0 +1,12 @@
+■ 수확 현장 각도 (공감형)
+mainTitle    : "오늘 [시간대] 첫 수확을 시작했어요"
+subTitle     : "수확 현장 핵심 한 줄"
+category     : "농장 일기"
+body1        : 수확 현장 이야기 (날씨·온도·느낌, 영농일지 기반, 2~3줄)
+body2        : 올해 특별한 점 (2~3줄)
+highlight1   : "현장 키워드1"
+highlight2   : "현장 키워드2"
+closing      : "댓글로 응원해주세요"
+handle       : 입력된 handle 값 그대로 사용
+cta          : "팔로우하고 농장 일상 함께해요"
+instagramCaption: 영농일지를 바탕으로 오늘 하루를 농민의 목소리로 자유롭게, 응원 유도 CTA

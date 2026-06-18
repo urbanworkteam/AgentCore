@@ -1,0 +1,12 @@
+■ 스토리텔링 각도 (공감형)
+mainTitle    : "지역명에서 N년째 작물명만 키웠어요"
+subTitle     : "농민 철학 한 줄"
+category     : "농부 이야기"
+body1        : 농민 이야기·재배 철학 (2~3줄)
+body2        : 재배 방식 핵심 (2~3줄)
+highlight1   : "재배 키워드1"
+highlight2   : "재배 키워드2"
+closing      : "저의 작물명을 소개합니다"
+handle       : 입력된 handle 값 그대로 사용
+cta          : "팔로우하고 농부의 이야기 더 보기"
+instagramCaption: 농민의 진솔한 하루·가족·철학을 자유롭게, 응원 유도 CTA

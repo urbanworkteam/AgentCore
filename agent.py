@@ -9,7 +9,8 @@ agent.py  —  Farmily AgentCore 메인 엔트리포인트
                 ├→ @tool get_crop_info
                 ├→ @tool search_recipe
                 ├→ @tool search_local_specialty
-                └→ @tool get_content_history
+                ├→ @tool get_content_history
+                └→ @tool search_trend
 
 기존 Lambda 대비 변경점:
   - farmily-generate-content Lambda (오케스트레이터) → @app.entrypoint
@@ -48,9 +49,19 @@ GUARDRAIL_VERSION    = os.environ.get("GUARDRAIL_VERSION", "1")
 
 _lambda_client = boto3.client("lambda", region_name=REGION)
 
-_INSTRUCTION_PATH = os.path.join(os.path.dirname(__file__), "agent_instruction.txt")
-with open(_INSTRUCTION_PATH, encoding="utf-8") as f:
-    SYSTEM_PROMPT = f.read()
+_PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "prompts")
+
+def _load_system_prompt() -> str:
+    base = open(os.path.join(_PROMPTS_DIR, "base_instruction.txt"), encoding="utf-8").read()
+    angles_dir = os.path.join(_PROMPTS_DIR, "angles")
+    angle_guides = "\n\n".join(
+        open(os.path.join(angles_dir, f), encoding="utf-8").read()
+        for f in sorted(os.listdir(angles_dir))
+        if f.endswith(".txt")
+    )
+    return base + "\n\n## PART 3-1. 각도별 textPool 가이드\n\n" + angle_guides
+
+SYSTEM_PROMPT = _load_system_prompt()
 
 # BedrockModel 클라이언트는 컨테이너 기동 시 1회만 생성
 _model_kwargs = dict(model_id=MODEL_ID, region_name=REGION)
