@@ -43,6 +43,8 @@ REGION               = os.environ.get("AWS_REGION", "ap-northeast-2")
 MODEL_ID             = os.environ.get("MODEL_ID", "apac.anthropic.claude-3-5-sonnet-20241022-v2:0")
 MEMORY_ID            = os.environ.get("AGENTCORE_MEMORY_ID", "")  # 미설정 시 Memory 비활성화
 CARD_RENDERER_LAMBDA = os.environ.get("CARD_RENDERER_LAMBDA", "farmily-card-renderer")
+GUARDRAIL_ID         = os.environ.get("GUARDRAIL_ID", "")
+GUARDRAIL_VERSION    = os.environ.get("GUARDRAIL_VERSION", "1")
 
 _lambda_client = boto3.client("lambda", region_name=REGION)
 
@@ -51,7 +53,14 @@ with open(_INSTRUCTION_PATH, encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
 
 # BedrockModel 클라이언트는 컨테이너 기동 시 1회만 생성
-_model = BedrockModel(model_id=MODEL_ID, region_name=REGION)
+_model_kwargs = dict(model_id=MODEL_ID, region_name=REGION)
+if GUARDRAIL_ID:
+    _model_kwargs.update(
+        guardrail_id=GUARDRAIL_ID,
+        guardrail_version=GUARDRAIL_VERSION,
+        guardrail_trace="enabled",
+    )
+_model = BedrockModel(**_model_kwargs)
 
 app = BedrockAgentCore()
 
