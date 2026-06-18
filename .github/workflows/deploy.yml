@@ -56,7 +56,7 @@ jobs:
     needs: ci
     if: github.ref == 'refs/heads/main'
     outputs:
-      image: ${{ steps.build.outputs.image }}
+      image: ${{ steps.set-output.outputs.image }}
 
     steps:
       - uses: actions/checkout@v4
@@ -89,6 +89,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Set image output
+        id: set-output
         run: echo "image=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:prod-${{ github.sha }}" >> $GITHUB_OUTPUT
 
   deploy-prod:
