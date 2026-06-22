@@ -175,6 +175,7 @@ def handler(payload, context):
             agent_kwargs["session_manager"] = session_mgr
         agent = Agent(**agent_kwargs)
 
+        _update_job(job_id, "ENRICHING", 30)
         _log("INFO", "agent_start", job_id=job_id, crop_name=ctx["crop_name"], platform=platform)
         _agent_start = time.time()
 
