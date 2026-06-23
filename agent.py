@@ -200,10 +200,19 @@ def handler(payload, context):
         if parsed.get("reasoning") == "JSON 파싱 실패 — fallback":
             raise ValueError(f"응답 파싱 실패. raw={raw_text[:200]}")
 
+        usage = response.metrics.accumulated_usage
+        input_tokens  = usage.get("inputTokens", 0)
+        output_tokens = usage.get("outputTokens", 0)
+
         _log("INFO", "agent_done",
              job_id=job_id, elapsed_ms=elapsed_ms,
+             input_tokens=input_tokens, output_tokens=output_tokens,
              angle=parsed.get("angle"), content_type=parsed.get("contentType"))
         _emit("AgentResponseTime", elapsed_ms, unit="Milliseconds",
+              dims=[{"Name": "Platform", "Value": platform}])
+        _emit("InputTokensPerJob",  input_tokens,  unit="Count",
+              dims=[{"Name": "Platform", "Value": platform}])
+        _emit("OutputTokensPerJob", output_tokens, unit="Count",
               dims=[{"Name": "Platform", "Value": platform}])
         _emit("ContentJobDone", 1,
               dims=[{"Name": "Platform", "Value": platform}])
