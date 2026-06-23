@@ -92,7 +92,7 @@ def _load_system_prompt() -> str:
 SYSTEM_PROMPT = _load_system_prompt()
 
 # BedrockModel 클라이언트는 컨테이너 기동 시 1회만 생성
-_model_kwargs = dict(model_id=MODEL_ID, region_name=REGION)
+_model_kwargs = dict(model_id=MODEL_ID, region_name=REGION, cache_prompt="default")
 if GUARDRAIL_ID:
     _model_kwargs.update(
         guardrail_id=GUARDRAIL_ID,
