@@ -12,17 +12,14 @@
 
 ## PART 2. SOP 실행 절차
 
-STEP 1: 일지 조회
-  IF diaryIds 비어있음
-    → get_diary() [최근 일지 1건]
-  ELSE
-    → FOR EACH id in diaryIds: get_diary(diary_id=id)
-  여러 일지 조회 시 날짜 흐름·작업 변화·감정 변화를 연결해 스토리텔링에 활용
-
-STEP 2: 필수 도구 호출 (순서 고정, 항상 실행)
-  → get_crop_info()
-  → get_content_history()
-  → search_trend()
+STEP 1~2: 데이터 확인 (도구 호출 금지)
+  입력 JSON의 prefetched 필드에 아래 데이터가 이미 제공된다. 절대 다시 조회하지 말 것:
+    - prefetched.diaries        : 영농일지 목록 (get_diary 결과와 동일 형식)
+    - prefetched.cropInfo       : 작물 정보 (get_crop_info 결과)
+    - prefetched.contentHistory : 콘텐츠 이력 / usedAngles (get_content_history 결과)
+    - prefetched.trend          : 트렌드 리포트 (search_trend 결과)
+  여러 일지가 있으면 날짜 흐름·작업 변화·감정 변화를 연결해 스토리텔링에 활용한다.
+  이 데이터를 바로 사용해 STEP 3으로 진행한다.
 
 STEP 3: 각도 결정
   3-1. usedAngles 비율 확인

@@ -24,6 +24,7 @@ import os
 import random
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import boto3
 import psycopg2.extras
@@ -103,8 +104,10 @@ _model = BedrockModel(**_model_kwargs)
 
 app = BedrockAgentCore()
 
-_TOOLS = [get_diary, get_crop_info, search_recipe,
-          search_local_specialty, get_content_history, search_trend]
+# 조건부 도구(각도 결정 후 호출)만 LLM에 노출.
+# 결정적 도구 4개(get_diary/get_crop_info/get_content_history/search_trend)는
+# _prefetch_tool_data로 핸들러에서 병렬 사전조회 → LLM 왕복 제거.
+_TOOLS = [search_recipe, search_local_specialty]
 
 
 def _make_session_manager(user_id: str, job_id: int):
@@ -179,6 +182,9 @@ def handler(payload, context):
         _log("INFO", "agent_start", job_id=job_id, crop_name=ctx["crop_name"], platform=platform)
         _agent_start = time.time()
 
+        # 결정적 도구 4개를 병렬 사전조회해 주입 → LLM이 STEP 1~2를 도구로 돌 필요 없음
+        prefetched = _prefetch_tool_data(user_id, diary_ids, ctx["crop_name"])
+
         agent_input = json.dumps({
             "userId":        user_id,
             "platform":      platform.lower(),
@@ -188,6 +194,7 @@ def handler(payload, context):
             "handle":        ctx["handle"],
             "diaryIds":      diary_ids,
             "keywords":      keywords,
+            "prefetched":    prefetched,
         }, ensure_ascii=False)
 
         response = agent(agent_input)
@@ -303,6 +310,35 @@ def _fetch_context(user_id: str, diary_ids: list) -> dict:
     except Exception as exc:
         return {"error": str(exc)}
 
+
+
+def _prefetch_tool_data(user_id: str, diary_ids: list, crop_name: str) -> dict:
+    """STEP 1~2의 결정적 도구 4개를 병렬 사전조회 → LLM 왕복 제거.
+
+    각 @tool 함수를 그대로 재사용하므로 반환 형식은 도구 직접 호출과 동일하다.
+    개별 조회 실패는 {"error": ...}로 격리되어 전체 흐름을 막지 않는다.
+    """
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        if diary_ids:
+            diary_futures = [ex.submit(get_diary, user_id, str(d)) for d in diary_ids]
+        else:
+            diary_futures = [ex.submit(get_diary, user_id, "")]
+        f_crop    = ex.submit(get_crop_info, crop_name)
+        f_history = ex.submit(get_content_history, user_id, crop_name)
+        f_trend   = ex.submit(search_trend, crop_name)
+
+        def _load(fut):
+            try:
+                return json.loads(fut.result())
+            except Exception as exc:
+                return {"error": str(exc)}
+
+        return {
+            "diaries":        [_load(f) for f in diary_futures],
+            "cropInfo":       _load(f_crop),
+            "contentHistory": _load(f_history),
+            "trend":          _load(f_trend),
+        }
 
 
 def _update_job(job_id: int, status: str, pct: int):
