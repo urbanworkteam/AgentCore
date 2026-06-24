@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+# stdout/stderr 버퍼링 비활성화 — 로그를 즉시 CloudWatch(awslogs)로 전송
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
 # 시스템 의존성 (psycopg2-binary용)

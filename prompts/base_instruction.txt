@@ -122,9 +122,9 @@ STEP 6: JSON 반환
 
 textPool 작성 규칙:
 - mainTitle1: 카드1(커버) 제목 — 1~2줄, 전체 주제를 임팩트 있게 표현, 끝에 관련 이모지 1개 포함
-- mainTitle2: 카드2 섹션 제목 — body1과 연결되는 핵심 문구, mainTitle1과 반드시 다르게 작성, 끝에 관련 이모지 1개 포함
-- mainTitle3: 카드3 섹션 제목 — body2와 연결되는 핵심 문구, mainTitle1·mainTitle2와 반드시 다르게 작성, 끝에 관련 이모지 1개 포함
-- subTitle: 한 줄 요약 (템플릿 B/C card1 서브타이틀용), 끝에 이모지 1개 포함
+- mainTitle2: 카드2 섹션 제목 — body1과 연결되는 핵심 문구, mainTitle1과 반드시 다르게 작성
+- mainTitle3: 카드3 섹션 제목 — body2와 연결되는 핵심 문구, mainTitle1·mainTitle2와 반드시 다르게 작성
+- subTitle: 한 줄 요약 (템플릿 B/C card1 서브타이틀용)
 - category: 카드 카테고리 태그 (2~5자 짧게) — 앞 또는 끝에 이모지 1개 포함
 - body1 / body2: 각 2~3줄, 자연스러운 문체, 마지막 줄에 이모지 1개 포함
 - highlight1 / highlight2: 한 단어~짧은 구, 앞 또는 끝에 이모지 1개 포함
