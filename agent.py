@@ -28,6 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import boto3
 import psycopg2.extras
+from opentelemetry import baggage, context as otel_context
 from bedrock_agentcore import BedrockAgentCoreApp as BedrockAgentCore
 from strands import Agent
 from strands.models import BedrockModel
@@ -160,9 +161,13 @@ def handler(payload, context):
     _log("INFO", "request_received",
          user_id=user_id, platform=platform, diary_count=len(diary_ids), job_id=job_id)
 
+    # OTel baggage에 session.id=job_id 주입 → GenAI Observability에서 job 단위로 trace 상관
+    _otel_token = otel_context.attach(baggage.set_baggage("session.id", f"job-{job_id}"))
+
     # 2. DB 컨텍스트 조회 (crop_id, crop_name, region 등)
     ctx = _fetch_context(user_id, diary_ids)
     if "error" in ctx:
+        otel_context.detach(_otel_token)
         return ctx
 
     # 3. 백엔드 job_id 사용 (agentcore 자체 job 생성 없음)
@@ -261,6 +266,9 @@ def handler(payload, context):
               dims=[{"Name": "Platform", "Value": platform}])
         _fail_job(job_id, str(exc))
         return {"error": str(exc), "jobId": job_id}
+
+    finally:
+        otel_context.detach(_otel_token)
 
 
 # ── DB 헬퍼 ───────────────────────────────────────────────────────────────

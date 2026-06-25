@@ -1,4 +1,6 @@
 bedrock-agentcore==1.14.1
-strands-agents[bedrock]==1.43.0
+strands-agents[bedrock,otel]==1.43.0
 psycopg2-binary==2.9.12
 boto3==1.43.30
+# OTel/ADOT — opentelemetry-instrument로 trace/span/log를 CloudWatch GenAI Observability에 전송
+aws-opentelemetry-distro==0.18.0
