@@ -93,8 +93,11 @@ def _load_system_prompt() -> str:
 
 SYSTEM_PROMPT = _load_system_prompt()
 
-# BedrockModel 클라이언트는 컨테이너 기동 시 1회만 생성
-_model_kwargs = dict(model_id=MODEL_ID, region_name=REGION, cache_prompt="default")
+# BedrockModel 클라이언트는 컨테이너 기동 시 1회만 생성.
+# 프롬프트 캐싱(cache_prompt)은 제거했다 — Guardrail과 동시 사용 불가이고
+# (함께 보내면 ConverseStream이 AccessDenied로 거부), 저트래픽(5분 TTL 잦은 만료)에선
+# 캐싱 이득이 미미해 가드레일 안전성을 우선한다. 고빈도 배치 생성이 생기면 재검토.
+_model_kwargs = dict(model_id=MODEL_ID, region_name=REGION)
 if GUARDRAIL_ID:
     _model_kwargs.update(
         guardrail_id=GUARDRAIL_ID,
