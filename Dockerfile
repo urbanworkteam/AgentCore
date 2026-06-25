@@ -12,6 +12,8 @@ ENV OTEL_PYTHON_CONFIGURATOR=aws_configurator
 ENV OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 ENV OTEL_EXPORTER_OTLP_LOGS_HEADERS=x-aws-log-group=/ecs/farmily-agentcore,x-aws-log-stream=otel,x-aws-metric-namespace=Farmily/AgentCore
 ENV OTEL_RESOURCE_ATTRIBUTES=service.name=farmily-agentcore
+# 헬스체크(/ping)는 30초마다 호출돼 trace를 도배하므로 계측에서 제외 → 실제 에이전트 trace만 남김
+ENV OTEL_PYTHON_EXCLUDED_URLS=ping,health
 
 WORKDIR /app
 
