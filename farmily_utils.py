@@ -26,7 +26,23 @@ _pool = pool.ThreadedConnectionPool(minconn=1, maxconn=5, **DB_CONFIG)
 
 @contextmanager
 def get_connection():
-    conn = _pool.getconn()
+    # psycopg2 풀은 빌려줄 때 연결을 검증하지 않는다. 컨테이너가 오래 떠 있으면
+    # RDS/네트워크가 idle 연결을 끊어 "connection already closed"가 난다.
+    # 빌릴 때 SELECT 1로 살아있는지 확인하고, 죽었으면 폐기 후 새 연결로 교체한다.
+    conn = None
+    for _ in range(3):
+        candidate = _pool.getconn()
+        try:
+            if candidate.closed:
+                raise psycopg2.OperationalError("connection closed")
+            with candidate.cursor() as cur:
+                cur.execute("SELECT 1")
+            conn = candidate
+            break
+        except psycopg2.Error:
+            _pool.putconn(candidate, close=True)  # 죽은 연결 폐기 → 풀이 새로 채움
+    if conn is None:
+        raise psycopg2.OperationalError("DB 연결 확보 실패 (풀의 모든 연결이 죽음)")
     try:
         yield conn
     except Exception:
