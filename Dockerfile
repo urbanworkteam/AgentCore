@@ -34,5 +34,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8080/ping || exit 1
 
 # AgentCore Runtime은 agent.py의 app 객체를 자동으로 찾음
-# opentelemetry-instrument로 래핑 → Strands/Bedrock/도구/DB 호출 자동 계측
-CMD ["opentelemetry-instrument", "python", "agent.py"]
+# [격리 테스트] opentelemetry-instrument 래퍼가 DB 접근을 깨뜨리는지 확인하기 위해
+# 일시적으로 OTel 래퍼를 제거. job이 정상 DONE되면 OTel이 원인으로 확정됨.
+# (OTel env/라이브러리는 그대로 두되, 래퍼가 없으면 비활성)
+CMD ["python", "agent.py"]
