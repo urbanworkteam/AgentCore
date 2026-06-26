@@ -28,7 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import boto3
 import psycopg2.extras
-from opentelemetry import baggage, context as otel_context
+from opentelemetry import baggage, context as otel_context, trace
 from bedrock_agentcore import BedrockAgentCoreApp as BedrockAgentCore
 from strands import Agent
 from strands.models import BedrockModel
@@ -92,6 +92,9 @@ def _load_system_prompt() -> str:
     return base + "\n\n## PART 3-1. 각도별 textPool 가이드\n\n" + angle_guides
 
 SYSTEM_PROMPT = _load_system_prompt()
+
+# OTel 트레이서 — job 루트 span 생성용 (prefetch·agent·렌더러를 한 trace로 묶기 위함)
+_tracer = trace.get_tracer("farmily-agentcore")
 
 # BedrockModel 클라이언트는 컨테이너 기동 시 1회만 생성.
 # 프롬프트 캐싱(cache_prompt)은 제거했다 — Guardrail과 동시 사용 불가이고
@@ -166,10 +169,18 @@ def handler(payload, context):
 
     # OTel baggage에 session.id=job_id 주입 → GenAI Observability에서 job 단위로 trace 상관
     _otel_token = otel_context.attach(baggage.set_baggage("session.id", f"job-{job_id}"))
+    # job 루트 span 시작 → 이후 _fetch_context·prefetch·agent()·card-renderer 호출이
+    # 모두 이 span 아래로 묶여 한 trace 트리가 된다(흩어진 고아 span 방지)
+    _job_span = _tracer.start_span("agentcore.job")
+    _job_span.set_attribute("job.id", job_id)
+    _job_span.set_attribute("platform", platform)
+    _span_token = otel_context.attach(trace.set_span_in_context(_job_span))
 
     # 2. DB 컨텍스트 조회 (crop_id, crop_name, region 등)
     ctx = _fetch_context(user_id, diary_ids)
     if "error" in ctx:
+        otel_context.detach(_span_token)
+        _job_span.end()
         otel_context.detach(_otel_token)
         return ctx
 
@@ -272,6 +283,8 @@ def handler(payload, context):
         return {"error": str(exc), "jobId": job_id}
 
     finally:
+        otel_context.detach(_span_token)
+        _job_span.end()
         otel_context.detach(_otel_token)
 
 
@@ -330,27 +343,40 @@ def _prefetch_tool_data(user_id: str, diary_ids: list, crop_name: str) -> dict:
     각 @tool 함수를 그대로 재사용하므로 반환 형식은 도구 직접 호출과 동일하다.
     개별 조회 실패는 {"error": ...}로 격리되어 전체 흐름을 막지 않는다.
     """
-    with ThreadPoolExecutor(max_workers=4) as ex:
-        if diary_ids:
-            diary_futures = [ex.submit(get_diary, user_id, str(d)) for d in diary_ids]
-        else:
-            diary_futures = [ex.submit(get_diary, user_id, "")]
-        f_crop    = ex.submit(get_crop_info, crop_name)
-        f_history = ex.submit(get_content_history, user_id, crop_name)
-        f_trend   = ex.submit(search_trend, crop_name)
+    # prefetch 묶음 span + 워커 스레드로 현재 OTel 컨텍스트 전파.
+    # 컨텍스트는 스레드 경계를 자동 전파하지 않아, 안 하면 도구 내부 boto3/임베딩 span이
+    # 부모 없는 고아 span이 된다. 부모(job 루트)를 워커에 attach해 한 트리로 묶는다.
+    with _tracer.start_as_current_span("prefetch_tools"):
+        _parent_ctx = otel_context.get_current()
 
-        def _load(fut):
+        def _run(fn, *args):
+            _tok = otel_context.attach(_parent_ctx)
             try:
-                return json.loads(fut.result())
-            except Exception as exc:
-                return {"error": str(exc)}
+                return fn(*args)
+            finally:
+                otel_context.detach(_tok)
 
-        return {
-            "diaries":        [_load(f) for f in diary_futures],
-            "cropInfo":       _load(f_crop),
-            "contentHistory": _load(f_history),
-            "trend":          _load(f_trend),
-        }
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            if diary_ids:
+                diary_futures = [ex.submit(_run, get_diary, user_id, str(d)) for d in diary_ids]
+            else:
+                diary_futures = [ex.submit(_run, get_diary, user_id, "")]
+            f_crop    = ex.submit(_run, get_crop_info, crop_name)
+            f_history = ex.submit(_run, get_content_history, user_id, crop_name)
+            f_trend   = ex.submit(_run, search_trend, crop_name)
+
+            def _load(fut):
+                try:
+                    return json.loads(fut.result())
+                except Exception as exc:
+                    return {"error": str(exc)}
+
+            return {
+                "diaries":        [_load(f) for f in diary_futures],
+                "cropInfo":       _load(f_crop),
+                "contentHistory": _load(f_history),
+                "trend":          _load(f_trend),
+            }
 
 
 def _update_job(job_id: int, status: str, pct: int):
