@@ -13,7 +13,9 @@ ENV OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 ENV OTEL_EXPORTER_OTLP_LOGS_HEADERS=x-aws-log-group=/ecs/farmily-agentcore,x-aws-log-stream=otel,x-aws-metric-namespace=Farmily/AgentCore
 ENV OTEL_RESOURCE_ATTRIBUTES=service.name=farmily-agentcore
 # 헬스체크(/ping)는 30초마다 호출돼 trace를 도배하므로 계측에서 제외 → 실제 에이전트 trace만 남김
-ENV OTEL_PYTHON_EXCLUDED_URLS=ping,health
+# span scope가 opentelemetry.instrumentation.starlette라 제네릭 OTEL_PYTHON_EXCLUDED_URLS는
+# 안 먹힌다(트레이스에 ping 2.9천건 잔존 확인) → starlette 전용 변수가 정답.
+ENV OTEL_PYTHON_STARLETTE_EXCLUDED_URLS=ping,health
 # psycopg2 자동계측이 ThreadedConnectionPool 연결을 즉시 깨뜨려(첫 쿼리에서 connection already closed)
 # 모든 job이 죽었던 원인. 계측만 제외하면 DB 정상 + 벡터검색(%s::vector 문자열)도 무관하게 동작.
 # 나머지(Strands/Bedrock/tool span·토큰)는 그대로 수집. (job122~125 'connection already closed'로 확정)
