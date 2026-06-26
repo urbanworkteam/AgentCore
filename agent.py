@@ -242,7 +242,8 @@ def handler(payload, context):
         _update_job(job_id, "GENERATING", 70)
 
         # 7. farmily-card-renderer 동기 호출 → 카드 키 획득 후 DB 업데이트
-        template_type = random.choice(['template_a', 'template_b', 'template_c'])
+        template_type = 'smartstore' if platform == "SMARTSTORE" \
+            else random.choice(['template_a', 'template_b', 'template_c'])
         card_keys = []
         try:
             card_keys = _invoke_card_renderer(job_id, user_id, cards, photo_s3_keys, template_type)
